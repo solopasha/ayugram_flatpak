@@ -1,9 +1,9 @@
-id: org.telegram.desktop
+id: com.ayugram.desktop
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
-command: telegram-desktop
-rename-icon: telegram
+command: ayugram-desktop
+rename-icon: ayugram
 finish-args:
   - --share=ipc
   - --share=network
@@ -37,6 +37,10 @@ cleanup-commands:
   - mkdir -p ${FLATPAK_DEST}/lib/ffmpeg
   - mkdir -p ${FLATPAK_DEST}/lib/webview
 build-options:
+  strip: true
+  no-debuginfo: true
+  cflags: -DNDEBUG -g0
+  cxxflags: -DNDEBUG -g0
   append-path: /usr/lib/sdk/llvm19/bin
   append-ld-library-path: /usr/lib/sdk/llvm19/lib
 cleanup:
@@ -134,7 +138,7 @@ modules:
         linkflags="$LDFLAGS" -j $FLATPAK_BUILDER_N_JOBS install
     sources:
       - type: archive
-        url: https://boostorg.jfrog.io/artifactory/main/release/1.87.0/source/boost_1_87_0.tar.bz2
+        url: https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2
         sha256: af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89
         x-checker-data:
           type: anitya
@@ -394,11 +398,6 @@ modules:
   - name: telegram-desktop
     buildsystem: cmake-ninja
     builddir: true
-    build-options:
-      arch:
-        aarch64:
-          cflags: -g1
-          cxxflags: -g1
     config-opts:
       - -DCMAKE_BUILD_TYPE=None
       - -DTDESKTOP_API_ID=611335
@@ -406,15 +405,8 @@ modules:
       - -DDESKTOP_APP_USE_PACKAGED_LAZY=ON
     sources:
       - type: git
-        url: https://github.com/telegramdesktop/tdesktop.git
-        commit: 88e80b4fae0f4616d49a33593d01d5e8f8ddc002
-        tag: v5.10.4
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/telegramdesktop/tdesktop/releases
-          tag-query: first | .tag_name
-          timestamp-query: first | .published_at
-          version-query: $tag | sub("^[vV]"; "")
+        url: https://github.com/AyuGram/AyuGramDesktop.git
+        commit: efa4c2ce77f01c9cadf6739e5ff6b271078ebe82
       - type: shell
         commands:
           - sed -i '/-Werror/d' Telegram/ThirdParty/dispatch/cmake/modules/DispatchCompilerWarnings.cmake
