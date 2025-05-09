@@ -1,8 +1,8 @@
-id: org.telegram.desktop
+id: com.ayugram.desktop
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
-command: telegram-desktop
+command: ayugram-desktop
 finish-args:
   - --share=ipc
   - --share=network
@@ -37,6 +37,8 @@ cleanup-commands:
   - mkdir -p ${FLATPAK_DEST}/lib/ffmpeg
   - mkdir -p ${FLATPAK_DEST}/lib/webview
 build-options:
+  cflags: -g1
+  cxxflags: -g1
   append-path: /usr/lib/sdk/llvm19/bin
   append-ld-library-path: /usr/lib/sdk/llvm19/lib
 cleanup:
@@ -412,10 +414,8 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     build-options:
-      arch:
-        aarch64:
-          cflags: -g1
-          cxxflags: -g1
+      cflags: -g
+      cxxflags: -g
     config-opts:
       - -DCMAKE_BUILD_TYPE=None
       - -DTDESKTOP_API_ID=611335
@@ -423,15 +423,8 @@ modules:
       - -DDESKTOP_APP_USE_PACKAGED_LAZY=ON
     sources:
       - type: git
-        url: https://github.com/telegramdesktop/tdesktop.git
-        commit: d22afa36c3e5c394043430d1358a856b8e52bdff
-        tag: v5.14.3
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/telegramdesktop/tdesktop/releases
-          tag-query: first | .tag_name
-          timestamp-query: first | .published_at
-          version-query: $tag | sub("^[vV]"; "")
+        url: https://github.com/AyuGram/AyuGramDesktop.git
+        commit: 3c7f3e87401aa6470e6e9008a0470b1598654ad8
       - type: shell
         commands:
           - sed -i '/-Werror/d' Telegram/ThirdParty/dispatch/cmake/modules/DispatchCompilerWarnings.cmake

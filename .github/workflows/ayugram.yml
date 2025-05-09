@@ -1,0 +1,191 @@
+name: Build and push
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: registry.fedoraproject.org/fedora:latest
+      options: --privileged --volume /:/run/host:rw
+    env:
+      APPID: com.ayugram.desktop
+
+    steps:
+      - name: Reclaim disk space
+        run: |
+          rm -rf \
+            /run/host/opt/ghc \
+            /run/host/opt/hostedtoolcache \
+            /run/host/usr/lib/google-cloud-sdk \
+            /run/host/usr/lib/jvm \
+            /run/host/usr/local/.ghcup \
+            /run/host/usr/local/lib/android \
+            /run/host/usr/local/share/boost \
+            /run/host/usr/local/share/powershell \
+            /run/host/usr/share/dotnet \
+            /run/host/usr/share/swift \
+            /run/host/var/lib/apt/lists/* || :
+
+      - name: Prepare
+        run: |
+          dnf -y up && dnf -y install --setopt=install_weak_deps=False \
+            ccache \
+            flatpak-builder \
+            git-core \
+            patch \
+            zstd
+          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Restore cache
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .flatpak-builder
+          key: flatpak-${{ hashFiles('*.yml', '*.json') }}
+          restore-keys: flatpak-
+
+      - name: Key
+        env:
+          GPGKEY: ${{ secrets.GPGKEY }}
+        run: |
+          echo "$GPGKEY" > ${{ github.repository_owner }}.private
+          gpg --import ${{ github.repository_owner }}.private
+          rm ${{ github.repository_owner }}.private
+
+      - name: Download sources
+        run: |
+          max_retries=5
+          sleep_seconds=7
+
+          for (( retry_count=0; retry_count<max_retries; retry_count++ )); do
+              if flatpak-builder --force-clean --sandbox --download-only builddir ${{ env.APPID }}.yml; then
+                  exit 0
+              fi
+
+              if [[ $retry_count -lt $((max_retries - 1)) ]]; then
+                  echo "Attempt $((retry_count + 1)) failed. Retrying in $sleep_seconds seconds..."
+                  sleep $sleep_seconds
+              fi
+          done
+
+          echo "Failed after $max_retries attempts"
+          exit 1
+
+      - name: Build
+        run: |
+          flatpak-builder \
+            --arch=x86_64 \
+            --ccache \
+            --default-branch=master \
+            --delete-build-dirs \
+            --disable-download \
+            --disable-rofiles-fuse \
+            --force-clean \
+            --gpg-sign=dc812d3cb7855746 \
+            --install-deps-from=flathub \
+            --repo=repo \
+            --sandbox \
+            builddir ${{ env.APPID }}.yml
+
+      - name: Bundles
+        run: |
+          flatpak build-bundle repo ${{ env.APPID }}.flatpak \
+            --arch=x86_64 \
+            --gpg-sign=dc812d3cb7855746 \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+            ${{ env.APPID }}
+
+          flatpak build-bundle repo ${{ env.APPID }}.Debug.flatpak \
+            --arch=x86_64 \
+            --gpg-sign=dc812d3cb7855746 \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo \
+            --runtime \
+            ${{ env.APPID }}.Debug
+
+      - name: Prune debuginfo from repo
+        run: |
+          for ref in $(ostree refs --repo=repo | grep '^runtime.*Debug'); do
+              ostree refs --repo=repo --delete "$ref"
+          done
+          flatpak build-update-repo --generate-static-deltas --prune repo/ --gpg-sign=dc812d3cb7855746
+
+      - name: flatpakrepo
+        run: |
+          cat << EOF > repo/${{ env.APPID }}.flatpakrepo
+          [Flatpak Repo]
+          Title=${{ github.repository }}
+          Url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          Homepage=${{ github.repositoryUrl }}
+          Description=${{ github.repository }}
+          Icon=https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png
+          GPGKey=$(base64 --wrap=0 < RPM-GPG-KEY-${{ github.repository_owner }})
+          EOF
+
+      - name: flatpakref
+        run: |
+          cat << EOF > repo/${{ env.APPID }}.flatpakref
+          [Flatpak Ref]
+          Title=${{ env.APPID }} from ${{ github.repository }}
+          Name=${{ env.APPID }}
+          Branch=master
+          Url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          SuggestRemoteName=ayugram-${{ github.repository_owner }}
+          Icon=https://raw.githubusercontent.com/AyuGram/AyuGramDesktop/master/.github/AyuGram.png
+          RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          IsRuntime=false
+          GPGKey=$(base64 --wrap=0 < RPM-GPG-KEY-${{ github.repository_owner }})
+          EOF
+
+      - name: Upload repo
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo/
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPID }}.flatpak
+          path: ${{ env.APPID }}.flatpak
+          retention-days: 7
+          compression-level: 0
+
+      - name: Upload debuginfo
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPID }}.Debug.flatpak
+          path: ${{ env.APPID }}.Debug.flatpak
+          retention-days: 7
+          compression-level: 0
+
+      - name: Save cache
+        id: cache-save
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .flatpak-builder
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+  deploy:
+    needs: main
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
