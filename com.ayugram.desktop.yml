@@ -1,8 +1,8 @@
-id: org.telegram.desktop
+id: com.ayugram.desktop
 runtime: org.freedesktop.Platform
-runtime-version: '24.08'
+runtime-version: "24.08"
 sdk: org.freedesktop.Sdk
-command: telegram-desktop
+command: ayugram-desktop
 finish-args:
   - --share=ipc
   - --share=network
@@ -24,7 +24,7 @@ add-extensions:
   org.freedesktop.Platform.ffmpeg-full:
     directory: lib/ffmpeg
     add-ld-path: .
-    version: '24.08'
+    version: "24.08"
     autodownload: true
     autodelete: false
   org.telegram.desktop.webview:
@@ -51,9 +51,9 @@ cleanup:
   - /modules
   - /share/doc
   - /share/man
-  - '*.prl'
-  - '*.la'
-  - '*.a'
+  - "*.prl"
+  - "*.la"
+  - "*.a"
 modules:
   - name: yasm
     buildsystem: cmake-ninja
@@ -68,7 +68,7 @@ modules:
           project-id: 5286
           url-template: https://www.tortall.net/projects/yasm/releases/yasm-$version.tar.gz
     cleanup:
-      - '*'
+      - "*"
 
   - name: jinja2
     buildsystem: simple
@@ -97,7 +97,7 @@ modules:
           type: pypi
           name: Jinja2
     cleanup:
-      - '*'
+      - "*"
 
   - name: systemd
     buildsystem: meson
@@ -301,7 +301,7 @@ modules:
           project-id: 7927
           url-template: https://download.qt.io/archive/qt/$major.$minor/$version/submodules/qtshadertools-everywhere-src-$version.tar.xz
     cleanup:
-      - '*'
+      - "*"
 
   - name: qtdeclarative
     buildsystem: cmake-ninja
@@ -372,7 +372,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/desktop-app/tg_owt.git
-        commit: 8198c4d8b91e22d68eb5c7327fd408e3b6abcc79
+        commit: c4192e8e2e10ccb72704daa79fa108becfa57b01
         x-checker-data:
           type: json
           parent-id: telegram-desktop-git-0
@@ -389,7 +389,24 @@ modules:
           timestamp-query: >-
             .commit.committer.date
     cleanup:
-      - '*'
+      - "*"
+
+  - name: td
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=None
+      - -DTD_INSTALL_SHARED_LIBRARIES=OFF
+      - -DTDE2E_ENABLE_INSTALL=ON
+      - -DTDE2E_INSTALL_INCLUDES=ON
+    cleanup:
+      - "*"
+    sources:
+      - type: git
+        url: https://github.com/tdlib/td.git
+        commit: f1b7500310baa496c0b779e4273a3aff0f14f42f
+      - type: patch
+        path: cecb2100de8e2640fd1a10053303e9eb744b872b.patch
 
   - name: telegram-desktop
     buildsystem: cmake-ninja
@@ -406,15 +423,8 @@ modules:
       - -DDESKTOP_APP_USE_PACKAGED_LAZY=ON
     sources:
       - type: git
-        url: https://github.com/telegramdesktop/tdesktop.git
-        commit: 5f73e8b3bf0d08693a76157da989206c00afe892
-        tag: v5.13.1
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/telegramdesktop/tdesktop/releases
-          tag-query: first | .tag_name
-          timestamp-query: first | .published_at
-          version-query: $tag | sub("^[vV]"; "")
+        url: https://github.com/AyuGram/AyuGramDesktop.git
+        commit: 12b16577ef49bed553b2a80fb7d9175327dc2b91
       - type: shell
         commands:
           - sed -i '/-Werror/d' Telegram/ThirdParty/dispatch/cmake/modules/DispatchCompilerWarnings.cmake
