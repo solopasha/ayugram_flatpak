@@ -1,8 +1,8 @@
-id: org.telegram.desktop
+id: com.ayugram.desktop
 runtime: org.gnome.Platform
 runtime-version: '51'
 sdk: org.gnome.Sdk
-command: Telegram
+command: AyuGram
 finish-args:
   - --share=ipc
   - --share=network
@@ -23,14 +23,16 @@ sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 build-options:
   append-path: /usr/lib/sdk/rust-stable/bin
-  cflags: -g1
-  cxxflags: -g1
+  cflags: -g0
+  cxxflags: -g0
+  strip: true
+  no-debuginfo: true
   env:
     CCACHE_COMPILERCHECK: '%compiler% -v'
     CMAKE_BUILD_TYPE: None
     CMAKE_PREFIX_PATH: /app
-    CARGO_NET_OFFLINE: 'true'
-    CARGO_PROFILE_RELEASE_OPT_LEVEL: '3'
+    CARGO_NET_OFFLINE: true
+    CARGO_PROFILE_RELEASE_OPT_LEVEL: 3
     CARGO_PROFILE_RELEASE_LTO: off
     CARGO_PROFILE_RELEASE_PANIC: unwind
 modules:
@@ -81,14 +83,14 @@ modules:
         "Jinja2" --no-build-isolation
     sources:
       - type: file
-        url: https://files.pythonhosted.org/packages/e7/91/add211b38c357bf1b94900b4f79c34661a92be65c0243d2b0a3393c5092d/flit_core-4.1.0.tar.gz
-        sha256: 62e12b63ead8335b37f59fabb977c7167fe476dafb5e41785dfa8c9aff843bc6
+        url: https://files.pythonhosted.org/packages/d3/8b/0370578a456986d6995344967a479dd5c9d4e064681550c2a9594bb58b4a/flit_core-4.2.0.tar.gz
+        sha256: 84e4e4d8fdd45ba2613800a3ebc6834de26d47ec9746efc3719f94181137b460
         x-checker-data:
           type: pypi
           name: flit-core
       - type: file
-        url: https://files.pythonhosted.org/packages/7e/99/7690b6d4034fffd95959cbe0c02de8deb3098cc577c67bb6a24fe5d7caa7/markupsafe-3.0.3.tar.gz
-        sha256: 722695808f4b6457b320fdc131280796bdceb04ab50fe1795cd540799ebe1698
+        url: https://files.pythonhosted.org/packages/38/9b/e422a865e1d5d57d0e509b4e0bf1c1a70a7f6382c29a5aa428df994c8bc8/markupsafe-3.0.4.tar.gz
+        sha256: 2e9ad7dd851bf45fab9f75cbff4cb493fee9979e8d8c7c9c3ee119022518edd6
         x-checker-data:
           type: pypi
           name: MarkupSafe
@@ -114,8 +116,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/systemd/systemd.git
-        commit: 8cc40e0c5e9234bf45084751ac53b1fbfe70b492
-        tag: v262
+        commit: 73612ea502d53baf9b0df4336cfc296a7ee0d524
+        tag: v262.1
         x-checker-data:
           type: json
           url: https://api.github.com/repos/systemd/systemd/releases/latest
@@ -194,8 +196,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/cisco/openh264.git
-        commit: 652bdb7719f30b52b08e506645a7322ff1b2cc6f
-        tag: v2.6.0
+        commit: 1bca62311e447fd9c39fc93de2c4b96cd5ce971c
+        tag: v2.7.0
         x-checker-data:
           type: json
           url: https://api.github.com/repos/cisco/openh264/releases/latest
@@ -262,41 +264,10 @@ modules:
       - type: archive
         url: https://download.qt.io/archive/qt/6.11/6.11.2/single/qt-everywhere-src-6.11.2.tar.xz
         sha256: 6dcfbca271d76a6502741a2c0dc6fc98ef7dd0b7b4cfd0abcebb285a86a26f33
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          tag-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          tag-query: >-
-            .parts.qt."source-tag"
-          version-query: >-
-            $tag | sub("^[vV]"; "")
-          timestamp-data-url: >-
-            "https://api.github.com/repos/qt/qt5/commits/\($tag)"
-          timestamp-query: >-
-            .commit.committer.date
-          url-query: >-
-            $version | split(".") as $v |
-            "https://download.qt.io/archive/qt/\($v[0]).\($v[1])/\($version)/single/qt-everywhere-src-\($version).tar.xz"
       - type: git
         url: https://github.com/desktop-app/patches.git
         commit: c6b2868d527e2d00a2438e95225a22ce9346d79f
         dest: patches
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          commit-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          commit-query: >-
-            .parts.patches."source-commit"
-          version-data-url: >-
-            "https://api.github.com/repos/desktop-app/patches/commits/\($commit)"
-          version-query: >-
-            "desktop-app/patches@\(.sha[0:7])"
-          timestamp-data-url: >-
-            "https://api.github.com/repos/desktop-app/patches/commits/\($commit)"
-          timestamp-query: >-
-            .commit.committer.date
       - type: shell
         commands:
           - |
@@ -314,21 +285,6 @@ modules:
       - type: git
         url: https://github.com/desktop-app/tg_owt.git
         commit: 9826d0e27894a575a63d4b15b2acf8e749e3da67
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          commit-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          commit-query: >-
-            .parts.webrtc."source-commit"
-          version-data-url: >-
-            "https://api.github.com/repos/desktop-app/tg_owt/commits/\($commit)"
-          version-query: >-
-            "desktop-app/tg_owt@\(.sha[0:7])"
-          timestamp-data-url: >-
-            "https://api.github.com/repos/desktop-app/tg_owt/commits/\($commit)"
-          timestamp-query: >-
-            .commit.committer.date
     cleanup:
       - '*'
 
@@ -341,21 +297,6 @@ modules:
       - type: git
         url: https://github.com/tdlib/td.git
         commit: 51743dfd01dff6179e2d8f7095729caa4e2222e9
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          commit-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          commit-query: >-
-            .parts.tde2e."source-commit"
-          version-data-url: >-
-            "https://api.github.com/repos/tdlib/td/commits/\($commit)"
-          version-query: >-
-            "tdlib/td@\(.sha[0:7])"
-          timestamp-data-url: >-
-            "https://api.github.com/repos/tdlib/td/commits/\($commit)"
-          timestamp-query: >-
-            .commit.committer.date
     cleanup:
       - '*'
 
@@ -373,45 +314,9 @@ modules:
       - type: git
         url: https://github.com/dkaraush/tlottie.git
         commit: 31f1b542f88e7b4be9a01e749920d857535fc715
-        x-cargo-lock:
-          - Cargo.lock
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          commit-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          commit-query: >-
-            .parts.tlottie."source-commit"
-          version-data-url: >-
-            "https://api.github.com/repos/dkaraush/tlottie/commits/\($commit)"
-          version-query: >-
-            "dkaraush/tlottie@\(.sha[0:7])"
-          timestamp-data-url: >-
-            "https://api.github.com/repos/dkaraush/tlottie/commits/\($commit)"
-          timestamp-query: >-
-            .commit.committer.date
-      - type: git
-        url: https://github.com/desktop-app/patches.git
-        commit: c6b2868d527e2d00a2438e95225a22ce9346d79f
-        dest: patches
-        x-checker-data:
-          type: json
-          parent-id: tdesktop-git-0
-          commit-data-url: >-
-            "https://github.com/telegramdesktop/tdesktop/raw/\($parent.new.tag//$parent.current.tag)/snap/snapcraft.yaml"
-          commit-query: >-
-            .parts.patches."source-commit"
-          version-data-url: >-
-            "https://api.github.com/repos/desktop-app/patches/commits/\($commit)"
-          version-query: >-
-            "desktop-app/patches@\(.sha[0:7])"
-          timestamp-data-url: >-
-            "https://api.github.com/repos/desktop-app/patches/commits/\($commit)"
-          timestamp-query: >-
-            .commit.committer.date
-      - type: shell
-        commands:
-          - git apply $PWD/patches/tlottie.patch
+      - type: patch
+        paths:
+          - tlottie.patch
       - tdesktop_rust.yml
     cleanup:
       - '*'
@@ -431,14 +336,8 @@ modules:
       - ccache --evict-older-than 1d
     sources:
       - type: git
-        url: https://github.com/telegramdesktop/tdesktop.git
-        commit: d81a5ac270fdcb5315b49f813614caa71f85697f
-        tag: v7.2.10
-        x-checker-data:
-          type: json
-          url: https://api.github.com/repos/telegramdesktop/tdesktop/releases
-          tag-query: first | .tag_name
-          timestamp-query: first | .published_at
-          version-query: $tag | sub("^[vV]"; "")
+        url: https://github.com/AyuGram/AyuGramDesktop.git
+        commit: d4b7546e77f93ac4c9bb53a3fcf7e9ffbbecf1b5
+        tag: v7.2.9
     cleanup:
       - /share/icons/hicolor/512x512@2
