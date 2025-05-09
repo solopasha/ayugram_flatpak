@@ -1,0 +1,13 @@
+diff --git a/lib/xdg/com.ayugram.desktop.desktop b/lib/xdg/com.ayugram.desktop.desktop
+index 49256d8e1a..facc4b5b83 100644
+--- a/lib/xdg/com.ayugram.desktop.desktop
++++ b/lib/xdg/com.ayugram.desktop.desktop
+@@ -2,7 +2,7 @@
+ Name=AyuGram Desktop
+ Comment=Desktop version of AyuGram - ToS breaking Telegram client
+ TryExec=AyuGram
+-Exec=env DESKTOPINTEGRATION=1 AyuGram -- %u
++Exec=AyuGram -- %u
+ Icon=com.ayugram.desktop
+ Terminal=false
+ StartupWMClass=AyuGram
