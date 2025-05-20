@@ -37,6 +37,8 @@ cleanup-commands:
   - mkdir -p ${FLATPAK_DEST}/lib/ffmpeg
   - mkdir -p ${FLATPAK_DEST}/lib/webview
 build-options:
+  cflags: -g1
+  cxxflags: -g1
   append-path: /usr/lib/sdk/llvm19/bin
   append-ld-library-path: /usr/lib/sdk/llvm19/lib
 cleanup:
@@ -391,31 +393,25 @@ modules:
     cleanup:
       - "*"
 
-  - name: td
+  - name: tde2e
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=None
-      - -DTD_INSTALL_SHARED_LIBRARIES=OFF
-      - -DTDE2E_ENABLE_INSTALL=ON
-      - -DTDE2E_INSTALL_INCLUDES=ON
+      - -DTD_E2E_ONLY=ON
     cleanup:
       - "*"
     sources:
       - type: git
         url: https://github.com/tdlib/td.git
-        commit: f1b7500310baa496c0b779e4273a3aff0f14f42f
-      - type: patch
-        path: cecb2100de8e2640fd1a10053303e9eb744b872b.patch
+        commit: 51743dfd01dff6179e2d8f7095729caa4e2222e9
 
   - name: telegram-desktop
     buildsystem: cmake-ninja
     builddir: true
     build-options:
-      arch:
-        aarch64:
-          cflags: -g1
-          cxxflags: -g1
+      cflags: -g
+      cxxflags: -g
     config-opts:
       - -DCMAKE_BUILD_TYPE=None
       - -DTDESKTOP_API_ID=611335
@@ -424,7 +420,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/AyuGram/AyuGramDesktop.git
-        commit: 12b16577ef49bed553b2a80fb7d9175327dc2b91
+        commit: 3c7f3e87401aa6470e6e9008a0470b1598654ad8
       - type: shell
         commands:
           - sed -i '/-Werror/d' Telegram/ThirdParty/dispatch/cmake/modules/DispatchCompilerWarnings.cmake
